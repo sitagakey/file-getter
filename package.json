@@ -1,7 +1,8 @@
 {
-  "name": "urlGetter",
-  "version": "1.0.0",
+  "name": "pdf-getter",
+  "version": "1.0.1",
   "description": "",
+  "repository": "https://github.com/hikiroom/pdfGetter",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,7 +11,8 @@
   "author": "Itagaki-Sho",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^3.0.0",
-    "puppeteer": "^2.0.0"
+    "chalk": "^4.0.0",
+    "puppeteer": "^3.2.0",
+    "request": "^2.88.2"
   }
 }
