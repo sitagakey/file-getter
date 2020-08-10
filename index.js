@@ -2,9 +2,17 @@ const fs = require('fs');
 const request = require('request');
 const puppeteer = require('puppeteer');
 const chalk = require('chalk');
-const DIR_NAME = './pdf';
-const URL = process.argv[2];
-const SELECTOR = process.argv[3];
+const DIR_NAME = './files';
+const arg = require('commander');
+
+arg
+.version('1.1.0')
+.option('-u, --url <1>', 'Target URL')
+.option('-s, --selector <1>', 'CSS Selector', 'html')
+.option('-e, --extension <items>', 'File Extensions', (items) => {
+    return items.split(',');
+})
+.parse(process.argv);
 
 /**
  * 指定したディレクトリ内にあるファイルを全て削除する
@@ -34,19 +42,22 @@ const goTo = async (url) => {
  * @param {Object} page pageObject
  * @param {String} selector PDFリンクの検索対象要素をCSSセレクタで指定（なにも指定されていなければ html になる）
  */
-const getPDFLink = (page, selector = 'html') => {
-    return page.evaluate((selector) => {
-        const content = document.querySelector(selector);
-        const a = content.querySelectorAll('a[href$=".pdf"]');
+const getFileLink = (page, selector, extension) => {
+    return page.evaluate((selector, extension) => {
         const arr = [];
-        let len = a.length;
-
-        for (;len--;) {
-            arr.unshift(a[len].href);
-        }
+        
+        extension.forEach((ext) => {
+            const content = document.querySelector(selector);
+            const a = content.querySelectorAll(`a[href$=".${ext}"]`);
+            let len = a.length;
+            
+            for (;len--;) {
+                arr.unshift(a[len].href);
+            }
+        });
 
         return arr;
-    }, selector);
+    }, selector, extension);
 };
 /**
  * リンクを元にPDFを出力
@@ -62,14 +73,14 @@ const output = async (links, dirName) => {
     });
 };
 
-if (URL) {
+if (arg.url) {
     fileRemoveOf(DIR_NAME).then(() => {
-        goTo(URL).then((pageData) => {
+        goTo(arg.url).then((pageData) => {
             const {browser, page} = pageData;
 
-            getPDFLink(page, SELECTOR).then((links) => output(links, DIR_NAME).then(() => browser.close().then(() => console.log(chalk.green(`SUCCESS!! Look at ${DIR_NAME} Directory.`)))));
+            getFileLink(page, arg.selector, arg.extension).then((links) => output(links, DIR_NAME).then(() => browser.close().then(() => console.log(chalk.green(`SUCCESS!! Look at ${DIR_NAME} Directory.`)))));
         });
     });
 } else {
-    console.error(chalk.red('Please URL specific. (e.g., node index.js https://example.html)'));
+    console.error(chalk.red('Please URL specific. (e.g., node index.js -u https://example.html)'));
 }
